@@ -1,5 +1,5 @@
 name: Compile Plugin
-on: [push, workflow_dispatch] # Сборка запустится при сохранении файла или вручную
+on: [push, workflow_dispatch]
 
 jobs:
   build:
@@ -7,27 +7,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4 # Берем код
 
-      - name: Set up JDK 21 # Ставим Java (для плагинов 2026 года нужна 21)
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build with Maven # Если нашел pom.xml, используй это
+      - name: Build with Maven # Пытаемся собрать через Maven, если есть pom.xml
         if: hashFiles('**/pom.xml') != ''
         run: mvn clean package
 
-      - name: Build with Gradle # Если нашел build.gradle, используй это
+      - name: Build with Gradle # Если Maven не сработал, пытаемся через Gradle
         if: hashFiles('**/build.gradle*', '**/build.gradle.kts') != ''
         run: |
           chmod +x gradlew
           ./gradlew build
 
-      - name: Upload Result # Сохраняем готовый файл
+      - name: Upload Result # Сохраняем готовый файл из любой папки
         uses: actions/upload-artifact@v4
         with:
           name: Compiled-Jar
           path: |
             target/*.jar
             build/libs/*.jar
+
